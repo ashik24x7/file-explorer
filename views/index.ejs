@@ -3,37 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Explorer</title>
+    <title>Markdown File Explorer</title>
 
     <link rel="stylesheet" href="/css/output.css">
 </head>
 
-<body class="bg-gray-100">
+<body class="bg-slate-100 h-screen overflow-hidden">
 
-<div class="max-w-5xl mx-auto mt-10">
+<div class="flex h-screen">
 
-    <div class="flex justify-between items-center">
+    <!-- Sidebar -->
+    <aside class="w-150 bg-white border border-gray-300 shadow-lg flex flex-col">
 
-        <h1 class="text-4xl font-bold">
-            📁 File Explorer
-        </h1>
+        <!-- Header -->
+        <div class="p-5 border border-gray-300">
 
-        <button
-            class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg">
-            New Folder
-        </button>
+            <div class="flex justify-between items-center">
 
-    </div>
+                <div>
 
-    <div class="mt-8 bg-white rounded-xl shadow p-6">
+                    <h1 class="text-2xl font-bold text-slate-800">
+                        📁 File Explorer
+                    </h1>
 
-        <p class="text-gray-500">
-            Your file tree will appear here.
-        </p>
+                </div>
 
-    </div>
+                <button
+                    onclick="createFolder()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm">
+
+                    + Folder
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- Search -->
+
+        <div class="p-4">
+
+            <input
+                id="search"
+                type="text"
+                placeholder="Search files..."
+                class="w-full border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+
+        </div>
+
+        <!-- Explorer -->
+
+        <div id="treeContainer" class="flex-1 overflow-y-auto px-3 pb-5">
+
+            <%- include("partials/tree",{nodes:[tree]}) %>
+
+        </div>
+
+    </aside>
+
+    <!-- Viewer -->
+
+    <main class="flex-1 flex flex-col">
+
+        <div class="bg-white border border-gray-300 shadow-sm px-8 py-5">
+
+            <h2
+                id="filename"
+                class="text-2xl font-bold">
+
+                Select a Markdown File
+
+            </h2>
+
+            <p class="text-gray-500 text-sm">
+
+                Click a file to preview it.
+
+            </p>
+
+        </div>
+
+        <div class="flex-1 overflow-auto p-8">
+
+            <div
+                id="viewer"
+                class="bg-white rounded-xl shadow-lg p-8 min-h-full">
+
+                <div class="text-center text-gray-400 mt-40">
+
+                    <div class="text-7xl mb-4">
+                        📄
+                    </div>
+
+                    <h2 class="text-2xl font-semibold">
+
+                        No File Selected
+
+                    </h2>
+
+                    <p>
+
+                        Choose a markdown file from the explorer.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Status -->
+
+        <div
+            id="status"
+            class="bg-slate-800 text-white px-6 py-2 text-sm">
+
+            Ready
+
+        </div>
+
+    </main>
 
 </div>
+
+<script>
+
+// ---------------- Search ----------------
+
+document.getElementById("search").addEventListener("input",function(){
+
+const value=this.value.toLowerCase();
+
+document.querySelectorAll(".file").forEach(file=>{
+
+const text=file.innerText.toLowerCase();
+
+file.style.display=text.includes(value)?"flex":"none";
+
+});
+
+});
+
+// ------------- Folder Collapse -------------
+
+document.querySelectorAll(".folder").forEach(folder=>{
+
+folder.addEventListener("click",()=>{
+
+const children=folder.nextElementSibling;
+
+const arrow=folder.querySelector(".arrow");
+
+if(!children)return;
+
+children.classList.toggle("hidden");
+
+arrow.innerHTML=
+children.classList.contains("hidden")
+?"▶":"▼";
+
+});
+
+});
+
+// ---------------- File Preview ----------------
+
+document.querySelectorAll(".file").forEach(file=>{
+
+file.addEventListener("click",async()=>{
+
+document.querySelectorAll(".file").forEach(f=>{
+
+f.classList.remove("bg-blue-100","text-blue-700");
+
+});
+
+file.classList.add("bg-blue-100","text-blue-700");
+
+const viewer=document.getElementById("viewer");
+
+viewer.innerHTML=`
+<div class="flex justify-center py-20">
+<div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+</div>
+`;
+
+const filename=file.dataset.file;
+
+    const response=await fetch("/file/"+encodeURIComponent(filename));
+
+    const html=await response.text();
+
+    document.getElementById("filename").innerText=filename;
+
+    viewer.innerHTML=html;
+
+    document.getElementById("status").innerText="Opened "+filename;
+
+});
+
+});
+
+// ---------------- New Folder ----------------
+
+function createFolder(){
+
+    const name=prompt("Enter folder name");
+
+    if(!name)return;
+
+    const root=document.querySelector("#treeContainer ul");
+
+    root.insertAdjacentHTML("beforeend",`
+
+    <li class="my-1">
+
+        <div class="folder flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-slate-100 cursor-pointer">
+
+        <span class="arrow">▶</span>
+
+        📁
+
+        <span>${name}</span>
+
+        </div>
+
+        <div class="children hidden ml-5"></div>
+
+    </li>
+
+    `);
+
+    location.reload();
+
+}
+
+</script>
 
 </body>
 </html>

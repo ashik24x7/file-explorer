@@ -1,0 +1,53 @@
+<ul class="space-y-1">
+
+<% nodes.forEach(node => { %>
+
+<li class="node">
+
+    <% if(node.type === "folder"){ %>
+
+        <div
+            class="folder flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-100 transition-all duration-200 select-none">
+
+            <span class="arrow text-gray-500 w-4 text-center">▼</span>
+
+            <span class="text-xl">📂</span>
+
+            <span class="font-medium text-slate-700 flex-1">
+                <%= node.name %>
+            </span>
+
+        </div>
+
+        <% if(node.children && node.children.length){ %>
+
+            <div class="children ml-6 border-l border-slate-200 pl-3">
+
+                <%- include("tree",{nodes:node.children}) %>
+
+            </div>
+
+        <% } %>
+
+    <% } else { %>
+
+        <div
+            class="file flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-blue-50 transition-all duration-200 ml-4"
+            data-file="<%= node.name %>"
+            draggable="true">
+
+            <span class="text-lg">📄</span>
+
+            <span class="truncate flex-1">
+                <%= node.name %>
+            </span>
+
+        </div>
+
+    <% } %>
+
+</li>
+
+<% }) %>
+
+</ul>
